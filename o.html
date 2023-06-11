@@ -1,0 +1,65 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<title></title>
+<script src="Cesium/Cesium.js"></script>
+<script src="cesium-hash.js"></script>
+<link href="Cesium/Widgets/widgets.css" rel="stylesheet"></link>
+<style>
+#cesiumContainer { position: absolute; top: 0; left: 0; height: 100%; width: 100%; margin: 0; 
+  overflow: hidden; padding: 0; font-family: sans-serif; }
+html { height: 100%; }
+body { padding: 0; margin: 0; overflow: hidden; height: 100%; }
+</style>
+</head>
+<body>
+<div id="cesiumContainer"></div>
+<script>
+Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI5N2UyMjcwOS00MDY1LTQxYjEtYjZjMy00YTU0ZTg5MmViYWQiLCJpZCI6ODAzMDYsImlhdCI6MTY0Mjc0ODI2MX0.dkwAL1CcljUV7NA7fDbhXXnmyZQU_c-G5zRx8PtEcxE"
+const viewer = new Cesium.Viewer("cesiumContainer", {
+  animation: false,
+  baseLayer: false,
+  baseLayerPicker: false,
+  geocoder: false,
+  homeButton: false,
+  navigationHelpButton: false,
+  sceneModePicker: false,
+  timeline: false
+})
+viewer.clock.currentTime = Cesium.JulianDate.fromIso8601("2023-03-21T12:00")
+viewer.scene.globe.depthTestAgainstTerrain = true
+
+const searchParams = new URLSearchParams(window.location.search)
+let cid = searchParams.get('cid') || 'QmWK1h24FDmxfvJoB7WY7VVzu5yYB85vHXz2HW9edq5MAc'
+
+const tileset = new Cesium.Cesium3DTileset({
+  url: `./${cid}/tileset.json`,
+  enableDebugWireframe: true,
+})
+viewer.scene.primitives.add(tileset)
+
+tileset.readyPromise.then(function () {
+  viewer.zoomTo(
+    tileset, new Cesium.HeadingPitchRange(0.0, -0.5, tileset.boundingSphere.radius / 4)
+  )
+})
+
+const credit = new Cesium.Credit('国土交通省 with UN Smart Maps')
+viewer.scene.frameState.creditDisplay.addDefaultCredit(credit)
+
+if (Cesium.Hash.decode(location.hash) == null) {
+  tileset.readyPromise.then(function () {
+    viewer.zoomTo(
+      tileset, 
+      new Cesium.HeadingPitchRange(
+        0.0, -0.5, 
+        tileset.boundingSphere.radius / 4)
+    )
+    location.hash = Cesium.Hash.encode(viewer)
+  })
+} else {
+  Cesium.Hash(viewer)
+}
+</script>
+</body>
+</html>
